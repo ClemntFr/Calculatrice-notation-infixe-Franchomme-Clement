@@ -78,4 +78,13 @@ let check_compute q =
       | (Unary_op f) -> print_string "Unary_op\n"
   done;;
 
-print_float (eval "4 3 + 2 *");; (*  (4+3)*2  *)
+
+let rec listen () =
+  try
+    let line = read_line () in
+    print_float (eval (String.sub line 0 (String.length line - 1)));
+    print_newline ();
+    listen ()
+  with End_of_file -> ();;
+
+let () = listen ();;

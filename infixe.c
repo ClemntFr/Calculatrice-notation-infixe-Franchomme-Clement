@@ -23,9 +23,10 @@ bool is_empty(Stack *pile) {
 }
 
 bool push(Stack *pile, char val) {
-    if (pile->top < MAX - 1)
+    if (pile->top < MAX - 1) {
         pile->a[++pile->top] = val;
         return true;
+    }
     
     printf("Stack Overflow\n");
     exit(EXIT_FAILURE);
@@ -184,9 +185,42 @@ void convert(char *expr) {
         free(stack);
 }
 
+void convert_2() {
+    Stack *stack = init_stack();
+    char c;
+    bool was_operand = false;
+    int read = scanf("%c", &c);
+    while (read != EOF) {
+        while (is_operand(c) && read != EOF) {
+            printf("%c", c);
+            read = scanf("%c", &c);
+            was_operand = true;
+        }
+        if (was_operand)
+            printf(" ");
+        
+        was_operand = false;
+        
+        if (c == '\n') {
+            empty_stack(stack);
+            printf("\n");
+        }
+        check_operator(stack, c);
+        read = scanf("%c", &c);
+    }
+
+    empty_stack(stack);
+    printf("\n");
+
+    if (stack->a != NULL)
+        free(stack->a);
+    
+    if (stack != NULL)
+        free(stack);
+}
+
 int main(void) {
-    char expr[] = "(5 + 3*(2-1))/7.1";
-    convert(expr);
+    convert_2();
 
     return 0;
 }
