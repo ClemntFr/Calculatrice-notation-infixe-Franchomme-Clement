@@ -1,5 +1,13 @@
 # Projet Calculatrice Notation Infixe Franchomme Clément #
 
+Pour l'instant il est uniquement possible de convertir et
+évaluer des expressions valides.
+
+Les opérateurs supportés en notation infixe sont : '+'; '-'; '*'; '/'; 'e'; 's'; '('; ')' \
+ou 'e' et 's' correspondent respectivement aux fonctions exponentielles et racine carrée.
+
+Les opérateurs supportés en notation postfixe sont : '+'; '-'; '*'; '/'; 'exp'; 'sqrt'
+
 # Pour compiler l'ensemble
   - Exécuter la commande `make`
 
