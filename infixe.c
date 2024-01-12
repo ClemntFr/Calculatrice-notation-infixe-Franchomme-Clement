@@ -51,12 +51,6 @@ char peek(Stack *pile) {
     return pile->a[pile->top];
 }
 
-void empty_stack(Stack *stack) {
-    while (!is_empty(stack)) {
-        printf("%c ", pop(stack));
-    }
-}
-
 bool is_in(char a, char *tab) {
     int i = 0;
     while(tab[i] != '\0') {
@@ -87,6 +81,12 @@ void print_operator(char op) {
         printf("%c ", op);
 }
 
+void empty_stack(Stack *stack) {
+    while (!is_empty(stack)) {
+        print_operator(pop(stack));
+    }
+}
+
 void print_stack(Stack *pile) {
     if (is_empty(pile)) {
         printf("Stack is Empty\n");
@@ -109,6 +109,8 @@ int get_prio(char op) {
         return 1;
     else if (op == '^')
         return 2;
+    else if (op == 'e' || op == 's')
+        return 3;
     else
         return -1;
 }
@@ -124,7 +126,7 @@ void check_prio(Stack *stack, char op) {
     if (prio_op > prio_stack) {
         push(stack, op);
     } else if (prio_stack >= prio_op) {
-        printf("%c ", pop(stack));
+        print_operator(pop(stack));
         check_prio(stack, op);
     } 
 }
@@ -143,16 +145,6 @@ void check_operator(Stack *stack, char op) {
                 print_operator(top);
                 top = pop(stack);
             }
-            break;
-
-        case 'e':
-            printf("Unsupported operator encountered\n");
-            exit(EXIT_FAILURE);
-            break;
-
-        case 's':
-            printf("Unsupported operator encountered\n");
-            exit(EXIT_FAILURE);
             break;
         
         default:
