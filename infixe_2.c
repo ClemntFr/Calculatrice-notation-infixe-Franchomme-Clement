@@ -1,55 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-
-#define MAX 1000
-
-typedef struct Stack {
-    int top;
-    char *a;
-} Stack;
-
-Stack * init_stack() {
-    Stack *stack = (Stack*) malloc(sizeof(*stack));
-    stack->top = -1;
-    char *a = (char*) malloc(sizeof(char) * MAX);
-    stack->a = a;
-
-    return stack;
-}
-
-bool is_empty(Stack *pile) {
-    return (pile->top == -1);
-}
-
-bool push(Stack *pile, char val) {
-    if (pile->top < MAX - 1) {
-        pile->a[++pile->top] = val;
-        return true;
-    }
-    
-    printf("Stack Overflow\n");
-    exit(EXIT_FAILURE);
-    return false;
-}
-
-char pop(Stack *pile) {
-    if (pile->top < 0) {
-        printf("Stack Underflow\n");
-        exit(EXIT_FAILURE);
-    }
-
-    return pile->a[pile->top--];
-}
-
-char peek(Stack *pile) {
-    if (pile->top < 0) {
-        printf("Stack Underflow\n");
-        exit(EXIT_FAILURE);
-    }
-
-    return pile->a[pile->top];
-}
+#include "pile.h"
 
 bool is_in(char a, char *tab) {
     int i = 0;
@@ -81,26 +33,6 @@ void print_operator(char op) {
         printf("%c ", op);
 }
 
-void empty_stack(Stack *stack) {
-    while (!is_empty(stack)) {
-        print_operator(pop(stack));
-    }
-}
-
-void print_stack(Stack *pile) {
-    if (is_empty(pile)) {
-        printf("Stack is Empty\n");
-        return;
-    }
-
-    printf("top -> ");
-    for (int i = pile->top; i > 0; i--) {
-        print_operator(pile->a[i]);
-        printf(" | ");
-    }
-    print_operator(pile->a[0]);
-    printf("\n");
-}
 
 int get_prio(char op) {
     if (op == '+' || op == '-')
@@ -115,13 +47,13 @@ int get_prio(char op) {
         return -1;
 }
 
-void check_prio(Stack *stack, char op) {
-    if (is_empty(stack)) {
+void check_prio(Stack **stack, char op) {
+    if (is_empty(*stack)) {
         push(stack, op);
         return ;
     }
     int prio_op = get_prio(op);
-    int prio_stack = get_prio(peek(stack));
+    int prio_stack = get_prio(peek(*stack));
 
     if (prio_op > prio_stack) {
         push(stack, op);
@@ -131,7 +63,7 @@ void check_prio(Stack *stack, char op) {
     } 
 }
 
-void check_operator(Stack *stack, char op) {
+void check_operator(Stack **stack, char op) {
     if (is_operator(op)) {
         switch (op)
         {
@@ -163,18 +95,14 @@ void convert(char *expr) {
                 printf("%c", expr[i++]);
             printf(" ");
         }
-        check_operator(stack, expr[i]);
+        check_operator(&stack, expr[i]);
         i += 1;
     }
 
-    empty_stack(stack);
+    empty_stack(&stack);
     printf("\n");
 
-    if (stack->a != NULL)
-        free(stack->a);
-    
-    if (stack != NULL)
-        free(stack);
+    delete_stack(&stack);
 }
 
 void convert_2() {
@@ -194,21 +122,17 @@ void convert_2() {
         was_operand = false;
         
         if (c == '\n') {
-            empty_stack(stack);
+            empty_stack(&stack);
             printf("\n");
         }
-        check_operator(stack, c);
+        check_operator(&stack, c);
         read = scanf("%c", &c);
     }
 
-    empty_stack(stack);
+    empty_stack(&stack);
     printf("\n");
 
-    if (stack->a != NULL)
-        free(stack->a);
-    
-    if (stack != NULL)
-        free(stack);
+    delete_stack(&stack);
 }
 
 int main(void) {
