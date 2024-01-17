@@ -84,7 +84,12 @@ let rec listen () =
   *)
   try
     let line = read_line () in
-    print_float (eval_h (String.sub line 0 (String.length line - 1)));
+    let x = 
+      if line.[String.length line - 1] = ' ' then
+        String.sub line 0 (String.length line - 1)
+      else line in
+    
+    print_float (eval_h x);      
     print_newline ();
     listen ()
   with End_of_file -> ();;
@@ -173,5 +178,28 @@ let eval_c () =
     with End_of_file -> () in
   aux ();;
 
+let mod_selection str =
+  if str = "-h" then
+    listen ()
+  else if str = "-c" then
+    eval_c ()
+  else
+    begin
+      print_string "Veuillez sélectionner un mode d'entrée valide : ";
+      print_newline ();
+      print_string "\t-h Pour entrer des expressions en notation postfixe usuelle,";
+      print_newline ();
+      print_string "\t appuyez simplement sur entrée pour évaluer";
+      print_newline ();
+      print_string "\t-c Pour entrer des expressions en notation ordinateur,";
+      print_newline ();
+      print_string "\t entrez ';' puis appuyez sur entrée pour évaluer";
+      print_newline ()
+    end;;
 
-let () = eval_c ();;
+
+let () =
+  if Array.length Sys.argv < 2 then
+    mod_selection "f"
+  else
+    mod_selection Sys.argv.(1);;
