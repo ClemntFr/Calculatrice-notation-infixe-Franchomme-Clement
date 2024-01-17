@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include "pile.h"
 
 bool is_in(char a, char *tab) {
@@ -37,19 +38,26 @@ bool is_operand(char op) {
     return is_in(op, operands);
 }
 
-void print_operator(char op) {
+void print_operator(char op, char space) {
     /*
         Affiche chaque opérateur 
         de manière a pouvoir l'évaluer
     */
     if (op == 'e')
-        printf("exp ");
+        printf("exp%c", space);
     else if (op == 's')
-        printf("sqrt ");
+        printf("sqrt%c", space);
     else
-        printf("%c ", op);
+        printf("%c%c", op, space);
 }
 
+/* Affiche tout ce qui est dans la pile séparé par le */
+/* caractère space jusqu'a ce que le dernier élément soit atteint */
+void empty_stack(Stack **stack, char space) {
+    while (!is_empty(*stack)) {
+        print_operator(pop(stack), space);
+    }
+}
 
 int get_prio(char op) {
     /*
@@ -68,7 +76,7 @@ int get_prio(char op) {
         return -1;
 }
 
-void check_prio(Stack **stack, char op) {
+void check_prio(Stack **stack, char op, char space) {
     /*
         Ajoute l'opérateur a la pile
         si celle ci est vide ou si la
@@ -88,12 +96,12 @@ void check_prio(Stack **stack, char op) {
     if (prio_op > prio_stack) {
         push(stack, op);
     } else {
-        print_operator(pop(stack));
-        check_prio(stack, op);
+        print_operator(pop(stack), space);
+        check_prio(stack, op, space);
     } 
 }
 
-void check_operator(Stack **stack, char op) {
+void check_operator(Stack **stack, char op, char space) {
     /*
         Ajoute l'opérateur a la pile si
         c'est une parenthèse ouvrante.
@@ -113,13 +121,13 @@ void check_operator(Stack **stack, char op) {
         case ')':
             char top = pop(stack);
             while (top != '(') {
-                print_operator(top);
+                print_operator(top, space);
                 top = pop(stack);
             }
             break;
         
         default:
-            check_prio(stack, op);
+            check_prio(stack, op, space);
             break;
         }
     }
@@ -150,19 +158,19 @@ void convert(char *expr) {
         }
         // On vérifie si on a un opérateur, si oui on
         // gère l'état de la pile en conséquence
-        check_operator(&stack, expr[i]);
+        check_operator(&stack, expr[i], ' ');
         i += 1;
     }
 
     // On affiche tous les opérateurs restant dans la pile
-    empty_stack(&stack);
+    empty_stack(&stack, ' ');
     printf("\n");
 
     // On libère la mémoire prise par la pile
     delete_stack(&stack);
 }
 
-void convert_2() {
+void convert_2(char mode) {
     /*
         Convertit une expression en notation infixe
         entrée sur l'entrée standard en notation 
@@ -172,6 +180,12 @@ void convert_2() {
         Précondition : L'expression en entrée doit être
         une expression valide en notation infixe
     */
+    char end = '\0';
+    char space = ' ';
+    if (mode == 'c') {
+        end = ';';
+        space = '\n';
+    }
     Stack *stack = init_stack();
     char c;
     bool was_operand = false;
@@ -190,33 +204,50 @@ void convert_2() {
         // espace pour passer au prochain opérateur
         // ou opérande
         if (was_operand)
-            printf(" ");
+            printf("%c", space);
         
         was_operand = false;
         
         // Si on est a la fin de l'expression on affiche
         // tous les opérateurs restant dans la pile
         if (c == '\n') {
-            empty_stack(&stack);
-            printf("\n");
+            empty_stack(&stack, space);
+            printf("%c\n", end);
         }
 
         // On vérifie si on est arrivé sur un opérateur
-        check_operator(&stack, c);
+        check_operator(&stack, c, space);
         // On lit le prochain caractère
         read = scanf("%c", &c);
     }
 
     // On affiche tous les opérateurs restant dans la pile
-    empty_stack(&stack);
-    printf("\n");
+    empty_stack(&stack, space);
+    printf("%c\n", end);
 
     // On libère la mémoire prise par la pile
     delete_stack(&stack);
 }
 
-int main(void) {
-    convert_2();
+bool is_supported_mod(char *mod) {
+    char supported_mods[] = "hc";
+    if (strlen(mod) < 2 || mod[0] != '-' || !is_in(mod[1], supported_mods)) {
+        printf("Veuillez entrer un mode d'affichage valide :\n");
+        printf("\t-h pour une sortie lisible (mode de déboggage)\n");
+        printf("\t-c pour une sortie destinée a l'ordinateur\n");
+        return false;
+    }
+    return true;
+}
+
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        is_supported_mod("f");
+        return -1;
+    }
+    if (!is_supported_mod(argv[1])) { return -1; }
+
+    convert_2(argv[1][1]);
 
     return 0;
 }

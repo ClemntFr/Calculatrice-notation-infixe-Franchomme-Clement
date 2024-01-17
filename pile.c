@@ -72,14 +72,6 @@ bool is_empty(Stack *stack) {
     return (stack->next == NULL);
 }
 
-/* Affiche tout ce qui est dans la pile séparé par des */
-/* espace jusqu'a ce que le dernier élément soit attein */
-void empty_stack(Stack **stack) {
-    while ((*stack)->next != NULL) {
-        printf("%c ", pop(stack));
-    }
-}
-
 /* Affiche l'état de la pile */
 void print_stack(Stack *stack) {
     Stack *tmp = stack;

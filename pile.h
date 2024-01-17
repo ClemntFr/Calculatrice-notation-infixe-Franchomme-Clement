@@ -1,3 +1,5 @@
+#ifndef PILE
+#define PILE
 typedef struct Stack {
     char top;
     struct Stack *next;
@@ -22,9 +24,6 @@ char peek(Stack *);
 /* Renvoie true si la pile est vide, false sinon */
 bool is_empty(Stack *);
 
-/* Affiche tout ce qui est dans la pile séparé par des */
-/* espace jusqu'a ce que le dernier élément soit atteint */
-void empty_stack(Stack **);
-
 /* Affiche l'état de la pile */
 void print_stack(Stack *);
+#endif
