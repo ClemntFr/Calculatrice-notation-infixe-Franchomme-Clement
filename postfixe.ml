@@ -36,10 +36,10 @@ let precompute str =
       match tmp with
           "sqrt" -> Queue.push (Unary_op sqrt) lst
         | "exp" -> Queue.push (Unary_op exp) lst
-        | "+" -> Queue.push (Binary_op (fun a b -> a +. b)) lst
-        | "-" -> Queue.push (Binary_op (fun a b -> a -. b)) lst
-        | "*" -> Queue.push (Binary_op (fun a b -> a *. b)) lst
-        | "/" -> Queue.push (Binary_op (fun a b -> a /. b)) lst
+        | "+" -> Queue.push (Binary_op ( +. )) lst
+        | "-" -> Queue.push (Binary_op ( -. )) lst
+        | "*" -> Queue.push (Binary_op ( *. )) lst
+        | "/" -> Queue.push (Binary_op ( /. )) lst
         |  _  -> (assert false)
     else
       Queue.push (Number (float_of_string tmp)) lst
@@ -157,8 +157,7 @@ let manage_line line stack =
 
 let eval_c () =
   (*
-    Evalue une expression en notation postfixe entrée
-    en plusieurs lignes terminée par le caractère ';'. EX:
+    Evalue une expression en notation postfixe ordinateur. EX:
     eval2 ();;
     3
     exp
@@ -185,21 +184,16 @@ let mod_selection str =
     eval_c ()
   else
     begin
-      print_string "Veuillez sélectionner un mode d'entrée valide : ";
-      print_newline ();
-      print_string "\t-h Pour entrer des expressions en notation postfixe usuelle,";
-      print_newline ();
-      print_string "\t appuyez simplement sur entrée pour évaluer";
-      print_newline ();
-      print_string "\t-c Pour entrer des expressions en notation ordinateur,";
-      print_newline ();
-      print_string "\t entrez ';' puis appuyez sur entrée pour évaluer";
-      print_newline ()
+      print_string "Veuillez sélectionner un mode d'entrée valide : \n";
+      print_string "\t-h Pour entrer des expressions en notation postfixe usuelle,\n";
+      print_string "\t appuyez simplement sur entrée pour évaluer\n";
+      print_string "\t-c Pour entrer des expressions en notation ordinateur,\n";
+      print_string "\t entrez ';' puis appuyez sur entrée pour évaluer\n"
     end;;
 
 
 let () =
   if Array.length Sys.argv < 2 then
-    mod_selection "f"
+    mod_selection "-c"
   else
     mod_selection Sys.argv.(1);;

@@ -180,7 +180,7 @@ void convert_2(char mode) {
         Précondition : L'expression en entrée doit être
         une expression valide en notation infixe
     */
-    char end = '\0';
+    char end = '\n';
     char space = ' ';
     if (mode == 'c') {
         end = ';';
@@ -212,7 +212,7 @@ void convert_2(char mode) {
         // tous les opérateurs restant dans la pile
         if (c == '\n') {
             empty_stack(&stack, space);
-            printf("%c\n", end);
+            (end ==  '\n')? printf("\n") : printf("%c\n", end);
         }
 
         // On vérifie si on est arrivé sur un opérateur
@@ -223,13 +223,14 @@ void convert_2(char mode) {
 
     // On affiche tous les opérateurs restant dans la pile
     empty_stack(&stack, space);
-    printf("%c\n", end);
+    (end ==  '\n')? printf("\n") : printf("%c\n", end);
 
     // On libère la mémoire prise par la pile
     delete_stack(&stack);
 }
 
 bool is_supported_mod(char *mod) {
+    /* Vérifie que le flag entré par l'utilisateur est valide si il y en a un */
     char supported_mods[] = "hc";
     if (strlen(mod) < 2 || mod[0] != '-' || !is_in(mod[1], supported_mods)) {
         printf("Veuillez entrer un mode d'affichage valide :\n");
@@ -241,13 +242,16 @@ bool is_supported_mod(char *mod) {
 }
 
 int main(int argc, char *argv[]) {
+    // Si on a pas de flag on ce met en mode ordinateur
     if (argc < 2) {
-        is_supported_mod("f");
-        return -1;
+        convert_2('c');
+        return 0;
     }
-    if (!is_supported_mod(argv[1])) { return -1; }
-
+    // Sinon on vérifie le flag
+    if (!is_supported_mod(argv[1])) { 
+        return -1; 
+    }
+    // Si il est valide on l'utilise
     convert_2(argv[1][1]);
-
     return 0;
 }

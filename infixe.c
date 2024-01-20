@@ -2,6 +2,17 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+/*
+    Ce fichier contient la première version de la partie C du projet.
+    J'ai depuis modifié :
+        - L'implémentation de la pile.
+        - L'entrée de la fonction de convertion. Passée d'un string
+        contenant toute les informations a l'entrée standard et un mode
+        d'affichage.
+        
+    Et ajouté les différents modes d'affichages
+*/
+
 #define MAX 1000
 
 typedef struct Stack {
