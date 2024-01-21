@@ -17,6 +17,14 @@ let is_unary = function
     "sqrt" | "exp" -> true
   | _ -> false;;
 
+let match_typed_op = function 
+    "sqrt" -> Unary_op sqrt
+  | "exp" -> Unary_op exp
+  | "+" -> Binary_op ( +. )
+  | "-" -> Binary_op ( -. )
+  | "*" -> Binary_op ( *. )
+  | "/" -> Binary_op ( /. )
+  |  _  -> assert false;;
 
 (* -- Calculs -- *)
 let precompute str =
@@ -28,51 +36,38 @@ let precompute str =
     dans une file (lst : my_type t) 
   *)
   let pre_l = String.split_on_char ' ' str in
-  let lst = Queue.create () in
-
-  for i = 0 to List.length pre_l - 1 do
-    let tmp = List.nth pre_l i in
-    if is_unary tmp || is_binary tmp then 
-      match tmp with
-          "sqrt" -> Queue.push (Unary_op sqrt) lst
-        | "exp" -> Queue.push (Unary_op exp) lst
-        | "+" -> Queue.push (Binary_op ( +. )) lst
-        | "-" -> Queue.push (Binary_op ( -. )) lst
-        | "*" -> Queue.push (Binary_op ( *. )) lst
-        | "/" -> Queue.push (Binary_op ( /. )) lst
-        |  _  -> (assert false)
-    else
-      Queue.push (Number (float_of_string tmp)) lst
-  done;
-  lst;;
-
-let check_compute q =
-  (*
-    Utilisé pour vérifier que la file était bien complétée
-    dans la fonction precompute 
-  *)
-  while not (Queue.is_empty q) do
-    match Queue.pop q with
-        (Number x) -> print_float x; print_newline ()
-      | (Binary_op f) -> print_string "Binary_op\n"
-      | (Unary_op f) -> print_string "Unary_op\n"
-  done;;
+  let rec aux l res = match l with
+      [] -> res
+    | h :: t ->
+      if is_unary h || is_binary h then 
+        let operator = match_typed_op h in
+        let new_res = res @ [operator] in
+        aux t new_res
+      else
+        let operand = Number (float_of_string h) in
+        let new_res = res @ [operand] in
+        aux t new_res 
+  in
+  aux pre_l [];;
 
 let eval_h str = (* Evalue une expression postfixe entrée sur une ligne *)
   let lst = precompute str in
   let stack = Stack.create () in
-  let rec aux file =
-    if Queue.is_empty file then Stack.pop stack
-    else
-      match Queue.pop file with
-          (Number a) -> Stack.push a stack; aux file
-        | (Binary_op f) -> let a = Stack.pop stack in
-                            let b = Stack.pop stack in
-                            Stack.push (f b a) stack;
-                            aux file
-        | (Unary_op f) ->  let a = Stack.pop stack in
-                            Stack.push (f a) stack;
-                            aux file
+
+  let rec aux lst = match lst with
+      [] -> Stack.pop stack
+    | (Number a) :: t -> Stack.push a stack; aux t
+
+    | (Binary_op f) :: t -> 
+      let a =  Stack.pop stack in
+      let b = Stack.pop stack in
+      Stack.push (f b a) stack;
+      aux t
+
+    | (Unary_op f) :: t ->  
+      let a = Stack.pop stack in
+      Stack.push (f a) stack;
+      aux t
     in
   aux lst;;
 
@@ -120,22 +115,7 @@ let match_op_bin (op : string) (a : float) (b : float) = match op with
 let manage_line line stack =
   (*
     Effectue l'opération adéquate a la chaine
-    de caractère lue en entrée :
-    
-    - Si line est un opérateur binaire, effectue 
-    l'opération sur les deux éléments du haut 
-    de la pile puis rempile le résultat.
-    
-    - Si line est un opérateur unaire, effectue 
-    l'opération sur l'élément du haut de la pile
-    puis rempile le résultat.
-
-    - Si line est une opérande, empile la valeur
-    de cette dernière en nombre flottant
-
-    - Si line = ";", on est arrivé a la fin de
-    l'expression a évaluer, écrit le résultat
-    sur l'entrée standard
+    de caractère lue en entrée
   *)
   if line = ";" then
     begin
@@ -156,16 +136,7 @@ let manage_line line stack =
       Stack.push (float_of_string line) stack;;
 
 let eval_c () =
-  (*
-    Evalue une expression en notation postfixe ordinateur. EX:
-    eval2 ();;
-    3
-    exp
-    2
-    +
-    ;
-    renverra le même résultat que eval "3 exp 2 + "
-  *)
+  (* Evalue une expression en notation postfixe ordinateur *)
   let stack = Stack.create () in
   let rec aux () =
     try
@@ -193,7 +164,9 @@ let mod_selection str =
 
 
 let () =
-  if Array.length Sys.argv < 2 then
-    mod_selection "-c"
-  else
-    mod_selection Sys.argv.(1);;
+  try
+    if Array.length Sys.argv < 2 then
+      mod_selection "-c"
+    else
+      mod_selection Sys.argv.(1)
+  with _ -> print_string "Expression invalide, impossible de l'évaluer\n";;

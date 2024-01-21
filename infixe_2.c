@@ -4,6 +4,17 @@
 #include <string.h>
 #include "pile.h"
 
+#define SUPPORTED_MODS "hc"
+#define OPERATORS "+-*/^es()"
+#define OPERANDS ".0123456789"
+
+
+typedef struct Mod {
+    char end;
+    char space;
+} Mod;
+
+
 bool is_in(char a, char *tab) {
     /* 
         Renvoie true si un caractère est 
@@ -20,13 +31,32 @@ bool is_in(char a, char *tab) {
     return false;
 }
 
+bool is_supported_mod(char *mod) {
+    /* Vérifie que le flag entré par l'utilisateur est valide si il y en a un */
+    if (strlen(mod) < 2 || mod[0] != '-' || !is_in(mod[1], SUPPORTED_MODS)) {
+        printf("Veuillez entrer un mode d'affichage valide :\n");
+        printf("\t-h pour une sortie lisible (mode de déboggage)\n");
+        printf("\t-c pour une sortie destinée a l'ordinateur\n");
+        return false;
+    }
+    return true;
+}
+
+Mod bind_mod(char mod) {
+    if (mod == 'h') {
+        return (Mod) {'\n', ' '};   
+    } else if (mod == 'c') {
+        return (Mod) {';', '\n'};
+    } else
+        return (Mod) {0, 0};
+}
+
 bool is_operator(char op) {
     /*
         Renvoie true si le caractère d'entrée
         est un opérateur connu, false sinon
     */
-    char operators[] = "+-*/^es()";
-    return is_in(op, operators); 
+    return is_in(op, OPERATORS); 
 }
 
 bool is_operand(char op) {
@@ -34,8 +64,7 @@ bool is_operand(char op) {
         Renvoie true si le caractère d'entrée
         est une opérande connue
     */
-    char operands[] = ".0123456789";
-    return is_in(op, operands);
+    return is_in(op, OPERANDS);
 }
 
 void print_operator(char op, char space) {
@@ -134,6 +163,7 @@ void check_operator(Stack **stack, char op, char space) {
 }
 
 int check_operand(char *c, int read, char space) {
+    /* Affiche l'opérande en entier si *c en est une */
     if (is_operand(*c)) {
         while (is_operand(*c) && read != EOF) {
             printf("%c", *c);
@@ -144,69 +174,96 @@ int check_operand(char *c, int read, char space) {
     return read;
 }
 
-void convert(char mod) {
+
+void convert_string(char *expr) {
     /*
-        Convertit une expression en notation infixe
-        entrée sur l'entrée standard en notation 
-        postfixe en affichant le résultat sur la
-        sortie standard
+        Prend en entrée une chaine de caractère
+        contenant une expression en notation
+        infixe et affiche cette dernière en
+        notation postfixe
 
-        Précondition : L'expression en entrée doit être
-        une expression valide en notation infixe
+        Précondition : expr est une expression
+        valide en notation infixe
     */
-    char end = '\n';
-    char space = ' ';
-    if (mod == 'c') {
-        end = ';';
-        space = '\n';
-    }
     Stack *stack = init_stack();
-    char c;
-    bool was_operand = false;
-    int read = scanf("%c", &c);
-    // Tant qu'on est pas arrivé a la fin
-    while (read != EOF) {
-        // Tant qu'on a une opérande on l'affiche et on lit
-        // le prochain caractère
-        read = check_operand(&c, read, space);
-        
-        // Si on est a la fin de l'expression on affiche
-        // tous les opérateurs restant dans la pile
-        if (c == '\n') {
-            empty_stack(&stack, space);
-            (end ==  '\n')? printf("\n") : printf("%c\n", end);
+    int i = 0;
+    // Tant qu'on arrive pas a la fin
+    while (expr[i] != '\0') {
+        if (is_operand(expr[i])) {
+            // Tant qu'on a une opérande on l'affiche
+            while(is_operand(expr[i]))
+                printf("%c", expr[i++]);
+            
+            // On passe a l'affichage de l'opérande ou
+            // opérateur suivant
+            printf(" ");
         }
-
-        // On vérifie si on est arrivé sur un opérateur
-        check_operator(&stack, c, space);
-        // On lit le prochain caractère
-        read = scanf("%c", &c);
+        // On vérifie si on a un opérateur, si oui on
+        // gère l'état de la pile en conséquence
+        check_operator(&stack, expr[i], ' ');
+        i += 1;
     }
 
     // On affiche tous les opérateurs restant dans la pile
-    empty_stack(&stack, space);
-    (end ==  '\n')? printf("\n") : printf("%c\n", end);
+    empty_stack(&stack, ' ');
+    printf("\n");
 
     // On libère la mémoire prise par la pile
     delete_stack(&stack);
 }
 
-bool is_supported_mod(char *mod) {
-    /* Vérifie que le flag entré par l'utilisateur est valide si il y en a un */
-    char supported_mods[] = "hc";
-    if (strlen(mod) < 2 || mod[0] != '-' || !is_in(mod[1], supported_mods)) {
-        printf("Veuillez entrer un mode d'affichage valide :\n");
-        printf("\t-h pour une sortie lisible (mode de déboggage)\n");
-        printf("\t-c pour une sortie destinée a l'ordinateur\n");
-        return false;
+void print_endline(char end) {
+    /*
+        Permet d'éviter de faire un retour a la ligne de trop
+        en mode humain
+    */
+    if (end == '\n')
+        printf("\n");
+    else
+        printf("%c\n", end);
+}
+
+void convert_stdin(char mod_input) {
+    /*
+        Convertit une expression en notation infixe
+        entrée sur l'entrée standard en notation 
+        postfixe. Affiche le résultat sur la
+        sortie standard
+
+        Précondition : L'expression en entrée doit être
+        une expression valide en notation infixe
+    */
+    Mod mod = bind_mod(mod_input);
+
+    Stack *stack = init_stack();
+    char c;
+    int read = scanf("%c", &c);
+
+    while (read != EOF && c != 'q') {
+        read = check_operand(&c, read, mod.space);
+        
+        // Si on est a la fin de l'expression on affiche
+        // tous les opérateurs restant dans la pile
+        if (c == '\n') {
+            empty_stack(&stack, mod.space);
+            print_endline(mod.end);
+        }
+
+        check_operator(&stack, c, mod.space);
+        read = scanf("%c", &c);
     }
-    return true;
+
+    // On affiche tous les opérateurs restant dans la pile
+    empty_stack(&stack, mod.space);
+    print_endline(mod.end);
+
+    delete_stack(&stack);
 }
 
 int main(int argc, char *argv[]) {
     // Si on a pas de flag on ce met en mode ordinateur
     if (argc < 2) {
-        convert('c');
+        convert_stdin('c');
         return 0;
     }
     // Sinon on vérifie le flag
@@ -214,6 +271,6 @@ int main(int argc, char *argv[]) {
         return -1; 
     }
     // Si il est valide on l'utilise
-    convert(argv[1][1]);
+    convert_stdin(argv[1][1]);
     return 0;
 }
