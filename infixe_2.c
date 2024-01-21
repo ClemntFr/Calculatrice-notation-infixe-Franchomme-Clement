@@ -133,44 +133,18 @@ void check_operator(Stack **stack, char op, char space) {
     }
 }
 
-void convert(char *expr) {
-    /*
-        Prend en entrée une chaine de caractère
-        contenant une expression en notation
-        infixe et affiche cette dernière en
-        notation postfixe
-
-        Précondition : expr est une expression
-        valide en notation infixe
-    */
-    Stack *stack = init_stack();
-    int i = 0;
-    // Tant qu'on arrive pas a la fin
-    while (expr[i] != '\0') {
-        if (is_operand(expr[i])) {
-            // Tant qu'on a une opérande on l'affiche
-            while(is_operand(expr[i]))
-                printf("%c", expr[i++]);
-            
-            // On passe a l'affichage de l'opérande ou
-            // opérateur suivant
-            printf(" ");
+int check_operand(char *c, int read, char space) {
+    if (is_operand(*c)) {
+        while (is_operand(*c) && read != EOF) {
+            printf("%c", *c);
+            read = scanf("%c", c);
         }
-        // On vérifie si on a un opérateur, si oui on
-        // gère l'état de la pile en conséquence
-        check_operator(&stack, expr[i], ' ');
-        i += 1;
+        printf("%c", space);
     }
-
-    // On affiche tous les opérateurs restant dans la pile
-    empty_stack(&stack, ' ');
-    printf("\n");
-
-    // On libère la mémoire prise par la pile
-    delete_stack(&stack);
+    return read;
 }
 
-void convert_2(char mode) {
+void convert(char mod) {
     /*
         Convertit une expression en notation infixe
         entrée sur l'entrée standard en notation 
@@ -182,7 +156,7 @@ void convert_2(char mode) {
     */
     char end = '\n';
     char space = ' ';
-    if (mode == 'c') {
+    if (mod == 'c') {
         end = ';';
         space = '\n';
     }
@@ -194,19 +168,7 @@ void convert_2(char mode) {
     while (read != EOF) {
         // Tant qu'on a une opérande on l'affiche et on lit
         // le prochain caractère
-        while (is_operand(c) && read != EOF) {
-            printf("%c", c);
-            read = scanf("%c", &c);
-            was_operand = true;
-        }
-
-        // Si on avait une opérande on affiche un
-        // espace pour passer au prochain opérateur
-        // ou opérande
-        if (was_operand)
-            printf("%c", space);
-        
-        was_operand = false;
+        read = check_operand(&c, read, space);
         
         // Si on est a la fin de l'expression on affiche
         // tous les opérateurs restant dans la pile
@@ -244,7 +206,7 @@ bool is_supported_mod(char *mod) {
 int main(int argc, char *argv[]) {
     // Si on a pas de flag on ce met en mode ordinateur
     if (argc < 2) {
-        convert_2('c');
+        convert('c');
         return 0;
     }
     // Sinon on vérifie le flag
@@ -252,6 +214,6 @@ int main(int argc, char *argv[]) {
         return -1; 
     }
     // Si il est valide on l'utilise
-    convert_2(argv[1][1]);
+    convert(argv[1][1]);
     return 0;
 }
