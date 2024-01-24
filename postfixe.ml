@@ -54,7 +54,7 @@ let eval_h str = (* Evalue une expression postfixe entrée sur une ligne *)
   let lst = precompute str in
   let stack = Stack.create () in
 
-  let rec aux lst = match lst with
+  let rec aux = function
       [] -> Stack.pop stack
     | (Number a) :: t -> Stack.push a stack; aux t
 
