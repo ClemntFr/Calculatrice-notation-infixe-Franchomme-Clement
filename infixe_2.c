@@ -79,12 +79,24 @@ void print_operator(char op, char separator) {
         printf("%c%c", op, separator);
 }
 
+void print_endline(char end) {
+    /*
+        Permet d'éviter de faire un retour a la ligne de trop
+        en mode humain
+    */
+    if (end == '\n')
+        printf("\n");
+    else
+        printf("%c\n", end);
+}
+
 /* Affiche tout ce qui est dans la pile séparé par le */
 /* caractère separator jusqu'a ce que le dernier élément soit atteint */
-void empty_stack(Stack **stack, char separator) {
+void empty_stack(Stack **stack, Mod mod) {
     while (!is_empty(*stack)) {
-        print_operator(pop(stack), separator);
+        print_operator(pop(stack), mod.separator);
     }
+    print_endline(mod.end);
 }
 
 int get_prio(char op) {
@@ -161,17 +173,6 @@ void comp_operator_wstack(Stack **stack, char op, char separator) {
     }
 }
 
-void print_endline(char end) {
-    /*
-        Permet d'éviter de faire un retour a la ligne de trop
-        en mode humain
-    */
-    if (end == '\n')
-        printf("\n");
-    else
-        printf("%c\n", end);
-}
-
 void convert_stdin(char mod_input) {
     /*
         Convertit une expression en notation infixe
@@ -194,23 +195,26 @@ void convert_stdin(char mod_input) {
             was_operand = true;
         } 
         else if (c == '\n') {
-            printf("%c", mod.separator * was_operand);
-            empty_stack(&stack, mod.separator);
-            print_endline(mod.end);
-        }
+            if (was_operand) {
+                printf("%c", mod.separator);
+                was_operand = false;
+            }
+            empty_stack(&stack, mod);
+        } 
         else {
-            printf("%c", mod.separator * was_operand);
-            was_operand = false;
-
+            if (was_operand) {
+                printf("%c", mod.separator);
+                was_operand = false;
+            }
             comp_operator_wstack(&stack, c, mod.separator);
         }
     }
 
     // On affiche tous les opérateurs restant dans la pile sans la supprimer
-    empty_stack(&stack, mod.separator);
-    print_endline(mod.end);
+    printf("%c", mod.separator * was_operand);
+    empty_stack(&stack, mod);
 
-    delete_stack(&stack);
+    delete_stack(stack);
 }
 
 

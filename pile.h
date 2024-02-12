@@ -9,7 +9,7 @@ typedef struct Stack {
 Stack * init_stack();
 
 /* Stack destructeur */
-bool delete_stack(Stack **);
+bool delete_stack(Stack *);
 
 /* Ajoute un élement au dessus de la pile */
 void push(Stack **, char);

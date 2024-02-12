@@ -12,19 +12,18 @@ Stack * init_stack() {
 }
 
 /* Stack destructeur */
-bool delete_stack(Stack **stack) {
-    Stack *buff = *stack;
+bool delete_stack(Stack *stack) {
+    Stack *buff = stack;
     // Tant qu'on est pas arrivé au dernier élément
     // on free l'élément actuel
     while (buff != NULL) {
-        buff = (*stack)->next;
-        if (*stack != NULL)
-            free(*stack);
-        else
+        buff = stack->next;
+        if (stack == NULL)
             // On ne devrait jamais passer ici
             return false;
+        free(stack);
 
-        *stack = buff;
+        stack = buff;
     }
     return true;
 }
