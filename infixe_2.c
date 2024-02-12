@@ -11,7 +11,7 @@
 
 typedef struct Mod {
     char end;
-    char space;
+    char separator;
 } Mod;
 
 
@@ -21,19 +21,18 @@ bool is_in(char a, char *tab) {
         dans une chaine de caractères,
         false sinon
     */
-    int i = 0;
-    while(tab[i] != '\0') {
-        if (tab[i] == a)
-            return true;
-        i += 1;
+    for (int i = 0; tab[i] != '\0'; i++) {
+        if (tab[i] == a) return true;
     }
-    
+
     return false;
 }
 
 bool is_supported_mod(char *mod) {
-    /* Vérifie que le flag entré par l'utilisateur est valide si il y en a un */
-    if (strlen(mod) < 2 || mod[0] != '-' || !is_in(mod[1], SUPPORTED_MODS)) {
+    /*
+        Vérifie que le flag entré par l'utilisateur est valide si il y en a un 
+    */
+    if (strlen(mod) != 2 || mod[0] != '-' || !is_in(mod[1], SUPPORTED_MODS)) {
         printf("Veuillez entrer un mode d'affichage valide :\n");
         printf("\t-h pour une sortie lisible (mode de déboggage)\n");
         printf("\t-c pour une sortie destinée a l'ordinateur\n");
@@ -67,24 +66,24 @@ bool is_operand(char op) {
     return is_in(op, OPERANDS);
 }
 
-void print_operator(char op, char space) {
+void print_operator(char op, char separator) {
     /*
         Affiche chaque opérateur 
         de manière a pouvoir l'évaluer
     */
     if (op == 'e')
-        printf("exp%c", space);
+        printf("exp%c", separator);
     else if (op == 's')
-        printf("sqrt%c", space);
+        printf("sqrt%c", separator);
     else
-        printf("%c%c", op, space);
+        printf("%c%c", op, separator);
 }
 
 /* Affiche tout ce qui est dans la pile séparé par le */
-/* caractère space jusqu'a ce que le dernier élément soit atteint */
-void empty_stack(Stack **stack, char space) {
+/* caractère separator jusqu'a ce que le dernier élément soit atteint */
+void empty_stack(Stack **stack, char separator) {
     while (!is_empty(*stack)) {
-        print_operator(pop(stack), space);
+        print_operator(pop(stack), separator);
     }
 }
 
@@ -105,7 +104,7 @@ int get_prio(char op) {
         return -1;
 }
 
-void check_prio(Stack **stack, char op, char space) {
+void compare_prio_wstack(Stack **stack, char op, char separator) {
     /*
         Ajoute l'opérateur a la pile
         si celle ci est vide ou si la
@@ -125,12 +124,12 @@ void check_prio(Stack **stack, char op, char space) {
     if (prio_op > prio_stack) {
         push(stack, op);
     } else {
-        print_operator(pop(stack), space);
-        check_prio(stack, op, space);
+        print_operator(pop(stack), separator);
+        compare_prio_wstack(stack, op, separator);
     } 
 }
 
-void check_operator(Stack **stack, char op, char space) {
+void comp_operator_wstack(Stack **stack, char op, char separator) {
     /*
         Ajoute l'opérateur a la pile si
         c'est une parenthèse ouvrante.
@@ -150,66 +149,16 @@ void check_operator(Stack **stack, char op, char space) {
         case ')':
             char top = pop(stack);
             while (top != '(') {
-                print_operator(top, space);
+                print_operator(top, separator);
                 top = pop(stack);
             }
             break;
         
         default:
-            check_prio(stack, op, space);
+            compare_prio_wstack(stack, op, separator);
             break;
         }
     }
-}
-
-int check_operand(char *c, int read, char space) {
-    /* Affiche l'opérande en entier si *c en est une */
-    if (is_operand(*c)) {
-        while (is_operand(*c) && read != EOF) {
-            printf("%c", *c);
-            read = scanf("%c", c);
-        }
-        printf("%c", space);
-    }
-    return read;
-}
-
-
-void convert_string(char *expr) {
-    /*
-        Prend en entrée une chaine de caractère
-        contenant une expression en notation
-        infixe et affiche cette dernière en
-        notation postfixe
-
-        Précondition : expr est une expression
-        valide en notation infixe
-    */
-    Stack *stack = init_stack();
-    int i = 0;
-    // Tant qu'on arrive pas a la fin
-    while (expr[i] != '\0') {
-        if (is_operand(expr[i])) {
-            // Tant qu'on a une opérande on l'affiche
-            while(is_operand(expr[i]))
-                printf("%c", expr[i++]);
-            
-            // On passe a l'affichage de l'opérande ou
-            // opérateur suivant
-            printf(" ");
-        }
-        // On vérifie si on a un opérateur, si oui on
-        // gère l'état de la pile en conséquence
-        check_operator(&stack, expr[i], ' ');
-        i += 1;
-    }
-
-    // On affiche tous les opérateurs restant dans la pile
-    empty_stack(&stack, ' ');
-    printf("\n");
-
-    // On libère la mémoire prise par la pile
-    delete_stack(&stack);
 }
 
 void print_endline(char end) {
@@ -237,28 +186,33 @@ void convert_stdin(char mod_input) {
 
     Stack *stack = init_stack();
     char c;
-    int read = scanf("%c", &c);
+    bool was_operand = false;
 
-    while (read != EOF && c != 'q') {
-        read = check_operand(&c, read, mod.space);
-        
-        // Si on est a la fin de l'expression on affiche
-        // tous les opérateurs restant dans la pile
-        if (c == '\n') {
-            empty_stack(&stack, mod.space);
+    while (scanf("%c", &c) != EOF && c != 'q') {
+        if (is_operand(c)) {
+            printf("%c", c);
+            was_operand = true;
+        } 
+        else if (c == '\n') {
+            printf("%c", mod.separator * was_operand);
+            empty_stack(&stack, mod.separator);
             print_endline(mod.end);
         }
+        else {
+            printf("%c", mod.separator * was_operand);
+            was_operand = false;
 
-        check_operator(&stack, c, mod.space);
-        read = scanf("%c", &c);
+            comp_operator_wstack(&stack, c, mod.separator);
+        }
     }
 
-    // On affiche tous les opérateurs restant dans la pile
-    empty_stack(&stack, mod.space);
+    // On affiche tous les opérateurs restant dans la pile sans la supprimer
+    empty_stack(&stack, mod.separator);
     print_endline(mod.end);
 
     delete_stack(&stack);
 }
+
 
 int main(int argc, char *argv[]) {
     // Si on a pas de flag on ce met en mode ordinateur
@@ -266,11 +220,10 @@ int main(int argc, char *argv[]) {
         convert_stdin('c');
         return 0;
     }
-    // Sinon on vérifie le flag
     if (!is_supported_mod(argv[1])) { 
         return -1; 
     }
-    // Si il est valide on l'utilise
+
     convert_stdin(argv[1][1]);
     return 0;
 }

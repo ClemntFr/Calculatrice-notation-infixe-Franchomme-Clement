@@ -85,7 +85,7 @@ void print_stack(Stack *stack) {
 
 /*
 int main(void) {
-    // Tests pour la pile
+    // Quelques tests pour la pile
     Stack *stack = init_stack();
     push(&stack, 'a');
     push(&stack, 'b');
@@ -98,7 +98,7 @@ int main(void) {
     print_stack(stack);
     empty_stack(&stack);
     
-    if (!delete_stack(&stack)) {
+    if (!empty_stack(&stack)) {
         printf("An error occured while freeing the stack\n");
         exit(EXIT_FAILURE);
     }
